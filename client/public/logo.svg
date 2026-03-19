@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
+  <rect width="180" height="48" rx="10" fill="#27187e"/>
+  <!-- Icon mark -->
+  <path d="M30 14 C30 14 19 12 14 18 C10 23 10 26 14 31 C18 36 28 34 30 33"
+    stroke="#f7f7ff" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <circle cx="31.5" cy="14" r="2" fill="#f7f7ff" opacity="0.8"/>
+  <circle cx="31.5" cy="33" r="2" fill="#f7f7ff" opacity="0.8"/>
+  <!-- Wordmark -->
+  <text x="44" y="33"
+    font-family="'Barlow Condensed', sans-serif"
+    font-weight="700"
+    font-size="22"
+    letter-spacing="2"
+    fill="#f7f7ff">CHILLAX</text>
+</svg>

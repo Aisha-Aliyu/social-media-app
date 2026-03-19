@@ -1,0 +1,18 @@
+{
+  "name": "Chillax",
+  "short_name": "Chillax",
+  "description": "Where real talk meets good vibes.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7f7ff",
+  "theme_color": "#27187e",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
