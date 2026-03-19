@@ -1,5 +1,7 @@
 # Chillax
 
+![Chillax](./chillax_banner.png)
+
 **A full-stack social media platform built with the MERN stack, Socket.io real-time messaging, and a production-grade security layer.**
 
 > Built from scratch. Every line of code written by hand, no boilerplate generators, no starter kits.
