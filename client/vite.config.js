@@ -14,12 +14,15 @@ export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        manualChunks: {
-          vendor: ['react', 'react-dom', 'react-router-dom'],
-          query: ['@tanstack/react-query'],
-          motion: ['framer-motion'],
-          socket: ['socket.io-client'],
-          store: ['zustand'],
+        manualChunks: (id) => {
+          if (id.includes('node_modules')) {
+            if (id.includes('react-dom') || id.includes('react-router')) return 'vendor'
+            if (id.includes('framer-motion')) return 'motion'
+            if (id.includes('socket.io-client')) return 'socket'
+            if (id.includes('@tanstack')) return 'query'
+            if (id.includes('zustand')) return 'store'
+            if (id.includes('react')) return 'vendor'
+          }
         },
       },
     },
