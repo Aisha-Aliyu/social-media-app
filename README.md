@@ -23,7 +23,7 @@ The goal was to build something that works like a real product, not a tutorial p
 ## Live Demo
 
 **Frontend:** [chillax-web-ruddy.vercel.app](https://chillax-web-ruddy.vercel.app)  
-**API:** [chillaxweb-api.onrender.com](https://chillax-api.onrender.com/health)
+**API:** [chillaxweb-api.onrender.com](https://chillaxweb-api.onrender.com/health)
 
 -----
 

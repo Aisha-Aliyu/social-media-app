@@ -2,6 +2,25 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import api from "../api/axios";
 
+// The API sleeps on Render's free plan and takes up to a minute to wake, so sign-in and
+// sign-up wait longer than other requests.
+const AUTH_TIMEOUT_MS = 90000;
+
+// Turn a failed request into a message that says what actually went wrong
+const describeError = (error, fallback) => {
+  if (error.response) {
+    return (
+      error.response.data?.message ||
+      error.response.data?.errors?.[0]?.msg ||
+      fallback
+    );
+  }
+  if (error.code === "ECONNABORTED") {
+    return "The server took too long to answer. Please try again.";
+  }
+  return "Couldn't reach the server. Please try again in a minute.";
+};
+
 const useAuthStore = create(
   persist(
     (set, get) => ({
@@ -13,7 +32,9 @@ const useAuthStore = create(
       register: async (userData) => {
         set({ isLoading: true });
         try {
-          const { data } = await api.post("/auth/register", userData);
+          const { data } = await api.post("/auth/register", userData, {
+            timeout: AUTH_TIMEOUT_MS,
+          });
           localStorage.setItem("chillax_token", data.token);
           set({
             user: data.user,
@@ -24,18 +45,16 @@ const useAuthStore = create(
           return { success: true };
         } catch (error) {
           set({ isLoading: false });
-          const message =
-            error.response?.data?.message ||
-            error.response?.data?.errors?.[0]?.msg ||
-            "Registration failed";
-          return { success: false, message };
+          return { success: false, message: describeError(error, "Registration failed") };
         }
       },
 
       login: async (credentials) => {
         set({ isLoading: true });
         try {
-          const { data } = await api.post("/auth/login", credentials);
+          const { data } = await api.post("/auth/login", credentials, {
+            timeout: AUTH_TIMEOUT_MS,
+          });
           localStorage.setItem("chillax_token", data.token);
           set({
             user: data.user,
@@ -46,9 +65,7 @@ const useAuthStore = create(
           return { success: true };
         } catch (error) {
           set({ isLoading: false });
-          const message =
-            error.response?.data?.message || "Login failed";
-          return { success: false, message };
+          return { success: false, message: describeError(error, "Login failed") };
         }
       },
 
