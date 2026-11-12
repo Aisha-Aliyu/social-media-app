@@ -10,11 +10,20 @@ const SHOW_AFTER_MS = 2500;
 const GIVE_UP_AFTER_MS = 100000;
 const REQUEST_TIMEOUT_MS = 60000;
 
-const isReady = async () => {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+// Waits ms, or less if the page is left
+const pause = (ms, signal) =>
+  new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    signal.addEventListener("abort", () => { clearTimeout(timer); resolve(); }, { once: true });
+  });
+
+const isReady = async (signal) => {
+  const request = new AbortController();
+  const stop = () => request.abort();
+  const timer = setTimeout(stop, REQUEST_TIMEOUT_MS);
+  signal.addEventListener("abort", stop, { once: true });
   try {
-    const res = await fetch(`${API_ORIGIN}/health`, { cache: "no-store", signal: controller.signal });
+    const res = await fetch(`${API_ORIGIN}/health`, { cache: "no-store", signal: request.signal });
     if (!res.ok) return false;
     const body = await res.json().catch(() => ({}));
     // Older servers don't report the database, so only a reported outage counts
@@ -23,6 +32,7 @@ const isReady = async () => {
     return false;
   } finally {
     clearTimeout(timer);
+    signal.removeEventListener("abort", stop);
   }
 };
 
@@ -31,25 +41,28 @@ const ServerStatus = () => {
   const [status, setStatus] = useState("checking");
 
   useEffect(() => {
-    let cancelled = false;
+    const page = new AbortController();
     const started = Date.now();
     const showTimer = setTimeout(() => {
-      if (!cancelled) setStatus((s) => (s === "checking" ? "waking" : s));
+      setStatus((s) => (s === "checking" ? "waking" : s));
     }, SHOW_AFTER_MS);
 
     (async () => {
-      while (!cancelled && Date.now() - started < GIVE_UP_AFTER_MS) {
-        if (await isReady()) {
-          if (!cancelled) setStatus("ready");
+      while (!page.signal.aborted) {
+        if (await isReady(page.signal)) {
+          if (!page.signal.aborted) setStatus("ready");
           return;
         }
-        await new Promise((resolve) => setTimeout(resolve, 3000));
+        if (page.signal.aborted) return;
+        // After the wake-up window, say it's down but keep checking in case it recovers
+        const overdue = Date.now() - started > GIVE_UP_AFTER_MS;
+        if (overdue) setStatus("down");
+        await pause(overdue ? 10000 : 3000, page.signal);
       }
-      if (!cancelled) setStatus("down");
     })();
 
     return () => {
-      cancelled = true;
+      page.abort();
       clearTimeout(showTimer);
     };
   }, []);

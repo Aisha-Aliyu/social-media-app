@@ -30,8 +30,12 @@ const allowedOrigins = (process.env.CLIENT_URL || "")
   .split(",")
   .map((origin) => origin.trim().replace(/\/+$/, ""))
   .filter(Boolean);
-// With no CLIENT_URL set, keep the previous behavior of accepting any origin
-const corsOrigin = allowedOrigins.length > 0 ? allowedOrigins : true;
+// With no CLIENT_URL set, keep the previous behavior: a plain "*", which browsers refuse
+// for credentialed requests, rather than echoing back whatever origin asks
+const corsOrigin = allowedOrigins.length > 0 ? allowedOrigins : "*";
+if (allowedOrigins.length === 0) {
+  console.warn("⚠️ CLIENT_URL is not set, so CORS accepts any origin. Set it to the frontend URL.");
+}
 
 // Socket.io setup
 const io = new Server(httpServer, {
