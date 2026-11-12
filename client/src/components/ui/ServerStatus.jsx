@@ -25,7 +25,10 @@ const isReady = async (signal) => {
   try {
     const res = await fetch(`${API_ORIGIN}/health`, { cache: "no-store", signal: request.signal });
     if (!res.ok) return false;
-    const body = await res.json().catch(() => ({}));
+    const body = await res.json();
+    // Only the API's own health reply counts. Anything else, such as this site's HTML
+    // page when VITE_API_URL is missing, means the API wasn't reached.
+    if (body?.status !== "OK") return false;
     // Older servers don't report the database, so only a reported outage counts
     return body.database !== "disconnected";
   } catch {
