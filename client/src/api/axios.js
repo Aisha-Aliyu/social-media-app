@@ -20,11 +20,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Handle 401 globally and force logout if token expired
+// Handle 401 globally and force logout if token expired. Sign-in and sign-up are
+// skipped: a 401 there means a wrong password, and reloading the page would hide
+// the error message from the user.
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    const isAuthRequest = error.config?.url?.startsWith("/auth/");
+    if (error.response?.status === 401 && !isAuthRequest) {
       localStorage.removeItem("chillax_token");
       localStorage.removeItem("chillax_user");
       window.location.href = "/login";

@@ -8,6 +8,7 @@ const securityHeaders = require("./middleware/securityHeaders");
 const morgan = require("morgan");
 const compression = require("compression");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 
 const connectDB = require("./config/db");
 const { apiLimiter } = require("./middleware/rateLimiter");
@@ -22,10 +23,20 @@ const messageRoutes = require("./routes/messages");
 const app = express();
 const httpServer = createServer(app);
 
+// Browsers send the Origin header without a trailing slash, so a CLIENT_URL saved as
+// "https://site.vercel.app/" would never match and every request would be blocked.
+// Comma-separated values allow more than one frontend, such as a preview URL.
+const allowedOrigins = (process.env.CLIENT_URL || "")
+  .split(",")
+  .map((origin) => origin.trim().replace(/\/+$/, ""))
+  .filter(Boolean);
+// With no CLIENT_URL set, keep the previous behavior of accepting any origin
+const corsOrigin = allowedOrigins.length > 0 ? allowedOrigins : true;
+
 // Socket.io setup
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CLIENT_URL,
+    origin: corsOrigin,
     methods: ["GET", "POST"],
     credentials: true,
   },
@@ -47,7 +58,7 @@ app.use(
         fontSrc: ["'self'", "https://fonts.gstatic.com"],
         imgSrc: ["'self'", "data:", "https:"],
         scriptSrc: ["'self'"],
-        connectSrc: ["'self'", process.env.CLIENT_URL],
+        connectSrc: ["'self'", ...allowedOrigins],
       },
     },
     crossOriginEmbedderPolicy: false,
@@ -61,7 +72,7 @@ app.use(compression());
 // CORS
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: corsOrigin,
     credentials: true,
   })
 );
@@ -87,7 +98,12 @@ app.use("/api/messages", messageRoutes);
 
 // Health check
 app.get("/health", (req, res) =>
-  res.json({ status: "OK", app: "Chillax API", realtime: "Socket.io active" })
+  res.json({
+    status: "OK",
+    app: "Chillax API",
+    realtime: "Socket.io active",
+    database: mongoose.connection.readyState === 1 ? "connected" : "disconnected",
+  })
 );
 
 // 404

@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
+import ServerStatus from "../components/ui/ServerStatus";
 
 const AuthLayout = ({ children, title, subtitle, altText, altLink, altLinkText }) => {
   return (
@@ -149,6 +150,7 @@ const AuthLayout = ({ children, title, subtitle, altText, altLink, altLinkText }
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35, duration: 0.5 }}
           >
+            <ServerStatus />
             {children}
           </motion.div>
 
